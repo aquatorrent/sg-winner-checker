@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "p-throttle": "^5.1.0"
+  }
+}

@@ -1,0 +1,522 @@
+<html>
+    <head>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    </head>
+
+    <body>
+        <main>
+            <div class="container">
+                <h1 class="mt-5 mb-4">SG Winner Checker!</h1>
+                <form>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h4 class="card-title">Steam Web API key</h4>
+                            <div class="card-subtitle text-body-secondary mb-2">Steam Web API key can be found <a href="https://steamcommunity.com/dev/apikey">here</a>. Your key won't be used for anywhere except for hitting <a href="https://developer.valvesoftware.com/wiki/Steam_Web_API#GetPlayerAchievements_.28v0001.29">this</a> (GetPlayerAchievements), and <a href="https://developer.valvesoftware.com/wiki/Steam_Web_API#GetOwnedGames_.28v0001.29">this</a> (GetOwnedGames) endpoint.</div>
+                            <div class="card-subtitle text-body-secondary mb-2"><b>DO NOT</b> share your Steam Web API key to untrusted sites!</div>
+                            <div class="card-text">
+                                <input class="form-control" id="key" placeholder="insert dev API key"></input>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row py-3">
+                        <div class="col-12">
+                            <h4>Target user</h4>
+                            <div class="text-body-secondary mb-2">Only Steamgifts username (https://www.steamgifts.com/user/xxxx) are supported.</a></div>
+                        </div>
+                        <div class="row" id="textField">
+                            <div class="col-3">
+                                <input class="form-control" id="username" placeholder="insert Steamgifts username"></input>
+                            </div>
+                            <div class="col-3 d-flex gap-2" id="buttons">
+                                <button class="btn btn-primary d-inline-flex align-items-center" id="search" type="button">Search</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <hr class="col-3 col-md-2"></hr>
+                <div class="row py-3">
+                    <div class="col-12">
+                        <h4>Win lists</h4>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table table-striped" id="gameTable">
+                                <thead>
+                                    <tr>
+                                        <th id="sortGame" style="cursor:pointer">Game</th>
+                                        <th id="sortOwned" style="cursor:pointer">Won by</th>
+                                        <th id="sortNotPlayed" style="cursor:pointer">Stats</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gameField">
+                                    <tr>
+                                        <td style="width:30%">
+                                            <div><a href="https://steamcommunity.com/app/318600"><img src="https://cdn.akamai.steamstatic.com/steam/apps/1042490/capsule_184x69.jpg"></a></div>
+                                            <div> <a href="https://steamcommunity.com/app/1042490">Call of the Sea</a></div>
+                                            <div><a href="https://www.steamgifts.com/giveaway/mDROi/call-of-the-sea">Giveaway link</a></div>
+                                        </td>
+                                        <td style="width:35%">
+                                            <div class="px-2">aquatorrent</div>
+                                            <div><a class="px-2" href="https://steamcommunity.com/profiles/76561198132503739/">Steam</a> | <a class="px-2" href="https://www.steamgifts.com/user/aquatorrent">
+                                                Steamgifts</a></div>
+                                        </td>
+                                        <td style="width:35%">
+                                            <div>Playtime: 6.2h</div>
+                                            <hr></hr>
+                                            <div>
+                                                <div><a href="https://howlongtobeat.com/?q=Call of the Sea">HLTB times:</a></div>
+                                                <div class="px-2">Main: 5.5h</div>
+                                                <div class="px-2">Main + Extra: 6h</div>
+                                                <div class="px-2">Completionist: 7.5h</div>
+                                            </div>
+                                            <hr></hr>
+                                            <div>Achievement: <a href="https://steamcommunity.com/profiles/76561198132503739/stats/1042490?tab=achievements">34/34</a></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading modal -->
+            <div class="modal fade" id="loading" tabindex="-1" aria-labelledby="loadingModal" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-body d-flex flex-row justify-content-center">
+                            <div class="d-inline-flex spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div class="d-inline-flex p-2">Please wait</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error modal -->
+            <div class="modal fade" id="error" tabindex="-1" aria-labelledby="errorModal" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-body d-flex flex-row justify-content-center">
+                            <div class="d-inline-flex p-2" id="modalErrorContent"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <script>
+            {
+
+                function fetchGASent(username, page) {
+                    let url = "https://superb-semolina-4be8e2.netlify.app/api/getcreatedgiveaways?username="+username+"&page="+page;
+                    //let url = "http://127.0.0.1:3000/api/getcreatedgiveaways?username="+username+"&page="+page;
+                    return fetch(url);
+                }
+
+                function fetchOwnedGames(username, appids) {
+                    let apiKey = document.getElementById('key').value;
+                    let url = "https://superb-semolina-4be8e2.netlify.app/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids;
+                    //let url = "http://127.0.0.1:3000/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids;
+                    return fetch(url);
+                }
+
+                function fetchAchievement(username, appids) {
+                    let apiKey = document.getElementById('key').value;
+                    let url = "https://superb-semolina-4be8e2.netlify.app/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids;
+                    //let url = "http://127.0.0.1:3000/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids;
+                    return fetch(url);
+                }
+
+                function fetchHLTB(name, appid) {
+                    let url = "https://superb-semolina-4be8e2.netlify.app/api/gethltbtime?name="+name+"&appid="+appid;
+                    //let url = "http://127.0.0.1:3000/api/gethltbtime?name="+name+"&appid="+appid;
+                    return fetch(url);
+                }
+
+                function sleep(milliseconds) {
+                    const date = Date.now();
+                    let currentDate = null;
+                    do {
+                        currentDate = Date.now();
+                    } while (currentDate - date < milliseconds);
+                }
+
+                function fetchUserGASent(username, page) {
+                    // do not hit server if input is invalid
+                    var regexAlphaNum=/^[a-zA-Z0-9]+$/;
+                    var regexNum = /^[0-9]+$/;
+                    let apiKey = document.getElementById('key').value;
+                    if (!apiKey.match(regexAlphaNum)) {
+                        setTimeout(function() {
+                            //your code to be executed after 1 second
+                            loadingModal.hide();
+                        }, 1000);
+                        modalErrorContent.innerHTML = "fill api key first";
+                        errorModal.show();
+                        return;
+                    } else if (!username.match(regexAlphaNum)){
+                        setTimeout(function() {
+                            //your code to be executed after 1 second
+                            loadingModal.hide();
+                        }, 1000);
+                        modalErrorContent.innerHTML = "invalid username";
+                        errorModal.show();
+                        return;
+                    }
+
+                    fetchGASent(username, page)
+                        .then(response => response.json())
+                        .then(resp => {
+                            let ga = resp.results;
+                            let winners = new Map();
+                            let promise = [];
+
+                            let gameStat = new Map();
+                            let hltb = new Map();
+                            
+                            for (let r of ga) {
+                                for (let w of r.winners) {
+                                    if (!w.steam_id || !r.app_id) {
+                                        continue;
+                                    }
+                                    if (!winners.has(w.steam_id)) {
+                                        winners.set(w.steam_id, [r.app_id]);
+                                    } else {
+                                        winners.get(w.steam_id).push(r.app_id);
+                                    }
+                                }
+                                //your code to be executed after 0.3 second
+                                let name = r.name;
+                                let bundle = " BUNDLE";
+                                if (!r.app_id && r.package_id) {
+                                    name = name.toUpperCase().endsWith(bundle) ? name.slice(0, -bundle.length) : name
+                                }
+                                sleep(33);
+                                promise.push(fetchHLTB(name, r.app_id));
+                            }
+
+                            let winnerArray = [];
+                            winners.forEach((v, k) => {
+                                let appids = v.join();
+                                promise.push(fetchAchievement(k, appids));
+                                promise.push(fetchOwnedGames(k, appids));
+                                winnerArray.push(k);
+                                return;
+                            });
+
+                            Promise.all(promise)
+                            .then((responses) => {
+                                return Promise.all(responses.map(resp => resp.json()));
+                            }).then(function(data){
+                                hltb = setHLTBResult(data.slice(0,ga.length-1));
+
+                                for (let j=ga.length; j < data.length; j+=2) {
+                                    let achData = ga.length %2;
+                                    if (j%2 != achData) {
+                                        continue;
+                                    }
+                                    let idx = Math.floor((j-ga.length)/2);
+                                    gameStat.set(winnerArray[idx], setGameStatResult(data[j],data[j+1]));
+                                }
+                                reconstructTable(ga, gameStat, hltb);
+                            }).catch(function(error){
+                                setTimeout(function() {
+                                    //your code to be executed after 1 second
+                                    loadingModal.hide();
+                                }, 1000);
+                                modalErrorContent.innerHTML = "error fetching user games <br>"+error;
+                                errorModal.show();
+                            });
+                        }).catch(function(error){
+                            setTimeout(function() {
+                                //your code to be executed after 1 second
+                                loadingModal.hide();
+                            }, 1000);
+                            modalErrorContent.innerHTML = "error fetching user games <br>"+error;
+                            errorModal.show();
+                        });
+                }
+
+                function setHLTBResult(hltb) {
+                    let res = new Map();
+                    hltb.forEach((v, k) => {
+                        res.set(v.appid, {
+                            main: v.main,
+                            plus: v.plus,
+                            comp: v.comp
+                        });
+                    })
+                    return res;
+                }
+
+                function setGameStatResult(ach, playtime) {
+                    let temp = new Map();
+                    
+                    if(!Array.isArray(ach)) {
+                        return temp;
+                    }
+                    ach.forEach((v, k) => {
+                        let pt = 0;
+                        if(Array.isArray(playtime)) {
+                            playtime.forEach((v2, k2) => {
+                                if (v2.appid == v.appid) {
+                                    pt = v2.playtime;
+                                    return;
+                                }
+                            })
+                        }
+                        temp.set(v.appid, {
+                            ach: v.ach,
+                            maxAch: v.maxAch,
+                            playtime: pt
+                        });
+                    })
+                    return temp;
+                }
+
+                function setPlaytimeResult(pt) {
+                    let temp = new Map();
+                    pt.forEach((v, k) => {
+                        temp.set(v.appid, {
+                            playtime: v.playtime
+                        });
+                    })
+                    return temp;
+                }
+
+                function toHoursAndMinutes(totalMinutes) {
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes % 60;
+
+                    return { hours, minutes };
+                }
+
+                function convertTime(time) {
+                    if(isNaN(time) || time <= 0){
+                        return "-";
+                    }
+
+                    hm = toHoursAndMinutes(time);
+                    if (hm.hours <= 0 && hm.minutes <=0) {
+                        return "-";
+                    } else if(hm.hours <= 0){
+                        return hm.minutes+"m";
+                    } else if (hm.minutes <=0) {
+                        return hm.hours +"h";
+                    }
+                    return hm.hours+"."+hm.minutes+"h";
+                }
+
+                function reconstructTable(ga, gameStat, hltb){
+                    /* table format
+                    <tr>
+                        <td style="width:30%">
+                            <div><a href="https://store.steampowered.com/app/318600"><img src="https://cdn.akamai.steamstatic.com/steam/apps/1042490/capsule_184x69.jpg"></a> <a href="https://store.steampowered.com/app/1042490">Call of the Sea</a></div>
+                            <div><a href="https://www.steamgifts.com/giveaway/mDROi/call-of-the-sea">Giveaway link</a></div>
+                        </td>
+                        <td style="width:35%">
+                            <div class="px-2">aquatorrent</div>
+                            <div><a class="px-2" href="https://steamcommunity.com/profiles/76561198132503739/">Steam</a> | <a class="px-2" href="https://www.steamgifts.com/user/aquatorrent">
+                                Steamgifts</a></div>
+                        </td>
+                        <td style="width:35%">
+                            <div>Playtime: 6.2h</div>
+                            <hr></hr>
+                            <div>
+                                <div><a href="https://howlongtobeat.com/?q=Call of the Sea">HLTB times:</a></div>
+                                <div class="px-2">Main: 5.5h</div>
+                                <div class="px-2">Main + Extra: 6h</div>
+                                <div class="px-2">Completionist: 7.5h</div>
+                            </div>
+                            <hr></hr>
+                            <div>Achievement: <a href="https://steamcommunity.com/profiles/76561198132503739/stats/1042490?tab=achievements">34/34</a></div>
+                        </td>
+                    </tr>
+                    */
+                    let gameField = document.getElementById('gameField');
+                    gameField.innerHTML = "";
+
+                    console.log(ga);
+                    console.log(gameStat);
+                    console.log(hltb);
+                    ga.forEach((v,k) => {
+                        let appID = v.app_id;
+                        v.winners.forEach((v2,k2) => {
+                            let steamID = v2.steam_id;
+                            let steamUserStat;
+                            if (appID) {
+                                appIDStr = appID.toString();
+                                if(gameStat.has(steamID) && gameStat.get(steamID).has(appIDStr)) {
+                                    steamUserStat = gameStat.get(steamID).get(appIDStr);
+                                }
+                            }
+
+                            let tr = document.createElement('tr');
+
+                            // td1
+                            let td1 = document.createElement('td');
+                            td1.setAttribute('style', 'width:30%');
+                            let div11 = document.createElement('div');
+                            let linkGame1 = document.createElement('a');
+                            if(appID) {
+                                linkGame1.setAttribute('href', "https://store.steampowered.com/app/"+appID);
+                            } else {
+                                linkGame1.setAttribute('href', "https://store.steampowered.com/subs/"+v.package_id);
+                            }
+                            let imgGame = document.createElement('img');
+                            if(appID) {
+                                imgGame.setAttribute('src', "https://cdn.akamai.steamstatic.com/steam/apps/"+appID+"/capsule_184x69.jpg");
+                            } else {
+                                imgGame.setAttribute('src', "https://cdn.akamai.steamstatic.com/steam/subs/"+v.package_id+"/capsule_184x69.jpg");
+                            }
+                            linkGame1.append(imgGame); 
+                            div11.append(linkGame1);
+                            div11.innerHTML += " ";
+                            
+                            let div12 = document.createElement('div');
+                            let linkGame2 = document.createElement('a');
+                            if(appID) {
+                                linkGame2.setAttribute('href', "https://store.steampowered.com/app/"+appID);
+                            } else {
+                                linkGame2.setAttribute('href', "https://store.steampowered.com/subs/"+appID);
+                            }
+                            linkGame2.innerHTML = v.name;
+                            div12.append(linkGame2);
+
+                            let div13 = document.createElement('div');
+                            let linkGame3 = document.createElement('a');
+                            linkGame3.setAttribute('href', v.link);
+                            linkGame3.innerHTML = "Giveaway link";
+                            div13.append(linkGame3);
+
+                            td1.append(div11);
+                            td1.append(div12);
+                            td1.append(div13);
+                            tr.append(td1);
+                            // /td1
+                            
+                            // td2
+                            let td2 = document.createElement('td');
+                            td2.setAttribute('style', 'width:35%');
+                            let div21 = document.createElement('div');
+                            div21.setAttribute('class', 'px-2');
+                            div21.innerHTML = v2.username;
+                            td2.append(div21);
+
+                            let div22 = document.createElement('div');
+                            let link21 = document.createElement('a');
+                            link21.setAttribute('class', 'px-2');
+                            if (steamID) {
+                                link21.setAttribute('href', "https://steamcommunity.com/profiles/"+steamID+"/");
+                            }
+                            link21.innerHTML = "Steam";
+                            div22.append(link21);
+                            div22.innerHTML += " | ";
+                            let link22 = document.createElement('a');
+                            link22.setAttribute('class', 'px-2');
+                            link22.setAttribute('href', "https://www.steamgifts.com/user/"+v2.username);
+                            link22.innerHTML = "Steamgifts";
+                            div22.append(link22);
+                            td2.append(div22);
+                            tr.append(td2);
+                            // /td2
+
+                            // td3
+                            let td3 = document.createElement('td');
+                            td3.setAttribute('style', 'width:35%');
+                            let div31 = document.createElement('div');
+                            div31.innerHTML += "Playtime: ";
+                            if (steamID && steamUserStat) {
+                                div31.innerHTML += convertTime(steamUserStat.playtime);
+                            } else {
+                                div323.innerHTML += "<no data>";
+                            }
+                            td3.append(div31);
+
+                            let hr31 = document.createElement('hr');
+                            td3.append(hr31);
+
+                            let div32 = document.createElement('div');
+                            let div321 = document.createElement('div');
+                            let link311 = document.createElement('a');
+                            link311.setAttribute('href', "https://howlongtobeat.com/?q="+v.name);
+                            link311.innerHTML += "HLTB times:";
+                            div321.append(link311);
+                            div32.append(div321);
+                            let div322 = document.createElement('div');
+                            div322.setAttribute('class', 'px-2');
+                            div322.innerHTML += "Main: ";
+                            if (hltb.has(appID)) {
+                                div322.innerHTML += convertTime(Math.floor(hltb.get(appID).main / 60));
+                            } else {
+                                div323.innerHTML += "<no data>";
+                            }
+                            div32.append(div322);
+                            let div323 = document.createElement('div');
+                            div323.setAttribute('class', 'px-2');
+                            div323.innerHTML += "Main + Extra: ";
+                            if (hltb.has(appID)) {
+                                div323.innerHTML += convertTime(Math.floor(hltb.get(appID).plus / 60));
+                            } else {
+                                div323.innerHTML += "<no data>";
+                            }
+                            div32.append(div323);
+                            let div324 = document.createElement('div');
+                            div324.setAttribute('class', 'px-2');
+                            div324.innerHTML += "Completionist: ";
+                            if (hltb.has(appID)) {
+                                div324.innerHTML += convertTime(Math.floor(hltb.get(appID).comp / 60));
+                            } else {
+                                div323.innerHTML += "<no data>";
+                            }
+                            div32.append(div324);
+                            td3.append(div32);
+
+                            let hr32 = document.createElement('hr');
+                            td3.append(hr32);
+
+                            let div33 = document.createElement('div');
+                            div33.innerHTML += "Achievement: ";
+                            let link32 = document.createElement('a');
+                            if (appID && steamID && steamUserStat) {
+                                link32.setAttribute('href', "https://steamcommunity.com/profiles/"+steamID+"/stats/"+appID+"?tab=achievements");
+                                link32.innerHTML += steamUserStat.ach + "/"+steamUserStat.maxAch;
+                                div33.append(link32);
+                            }
+                            td3.append(div33);
+                            tr.append(td3);
+                            // td3
+                            
+                            gameField.append(tr);
+                        });
+
+                    })
+                    setTimeout(function() {
+                        //your code to be executed after 1 second
+                        loadingModal.hide();
+                    }, 1000);
+                }
+
+                let search = document.getElementById('search');
+                let loadingModal = new bootstrap.Modal(document.getElementById('loading'), {backdrop: 'static', keyboard: false});
+                let errorModal = new bootstrap.Modal(document.getElementById('error'));
+                let modalErrorContent = document.getElementById('modalErrorContent');
+
+                search.onclick = function() {
+                    let username = document.getElementById("username");
+                    if (username.value === "") {
+                        modalErrorContent.innerHTML = "username must be filled";
+                        errorModal.show();
+                    }
+                    loadingModal.show();
+                    fetchUserGASent(username.value, 1);
+                }
+            }
+        </script>
+    </body>
+</html>
