@@ -1,4 +1,4 @@
-# Steam Library Matcher!
-##### Matches multiple Steam user's library to find common games.
+# SG Winner Checker!
+##### Checks sg winner for progress.
 
-[Give me a try](https://aquatorrent.github.io/steam-library-matcher/)
+[Give me a try](https://aquatorrent.github.io/sg-winner-checker/)
