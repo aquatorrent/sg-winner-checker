@@ -118,17 +118,17 @@
                     return fetch(url);
                 }
 
-                function fetchOwnedGames(username, appids) {
+                function fetchOwnedGames(username, appids, dlc) {
                     let apiKey = document.getElementById('key').value;
-                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids;
-                    let url = "http://127.0.0.1:3000/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids;
+                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
+                    let url = "http://127.0.0.1:3000/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
                     return fetch(url);
                 }
 
-                function fetchAchievement(username, appids) {
+                function fetchAchievement(username, appids, dlc) {
                     let apiKey = document.getElementById('key').value;
-                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids;
-                    let url = "http://127.0.0.1:3000/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids;
+                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
+                    let url = "http://127.0.0.1:3000/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
                     return fetch(url);
                 }
 
@@ -146,19 +146,17 @@
                     } while (currentDate - date < milliseconds);
                 }
 
-                function fetchAchievementAndPlaytime(winners) {
+                function fetchAchievementAndPlaytime(winners, promise, dlc) {
                     winnerArray = [];
                     winners.forEach((v, k) => {
                         let appids = v.join();
-                        promise.push(fetchAchievement(k, appids));
-                        promise.push(fetchOwnedGames(k, appids));
+                        promise.push(fetchAchievement(k, appids, dlc));
+                        promise.push(fetchOwnedGames(k, appids, dlc));
                         winnerArray.push(k);
                         return;
                     });
 
-                    return Promise.all(promise).then((responses) => {
-                        return Promise.all(responses.map(resp => resp.json()));
-                    });
+                    return promise, winnerArray;
                 }
 
                 function fetchUserGASent(username, page) {
@@ -185,13 +183,13 @@
                     }
 
                     let ga;
-                    let winnerArray = [];
                     fetchGASent(username, page)
                         .then(response => response.json())
                         .then(resp => {
                             ga = resp.results;
                             let winners = new Map();
                             let promise = [];
+                            let winnerArray = [];
                             
                             for (let r of ga) {
                                 for (let w of r.winners) {
@@ -211,50 +209,96 @@
                                 promise.push(fetchHLTB(name, r.app_id));
                             }
 
-                            winnerArray = [];
-                            winners.forEach((v, k) => {
-                                let appids = v.join();
-                                promise.push(fetchAchievement(k, appids));
-                                promise.push(fetchOwnedGames(k, appids));
-                                winnerArray.push(k);
-                                return;
-                            });
-                            fetchAchievementAndPlaytime(winners);
+                            promise, winnerArray = fetchAchievementAndPlaytime(winners, promise, false);
+                            Promise.all(promise)
+                            .then((responses) => {
+                                return Promise.all(responses.map(resp => resp.json()));
+                            })
+                            .then(data => {
+                                let gameStat = new Map();
+                                let hltb = new Map();
+                                hltb = setHLTBResult(data.slice(0,ga.length-1));
 
-
-                            return Promise.all(promise);
-                        })
-                        .then((responses) => {
-                            return Promise.all(responses.map(resp => resp.json()));
-                        })
-                        .then(function(data){
-                            let gameStat = new Map();
-                            let hltb = new Map();
-                            hltb = setHLTBResult(data.slice(0,ga.length-1));
-
-                            for (let j=ga.length; j < data.length; j+=2) {
-                                let achData = ga.length %2;
-                                if (j%2 != achData) {
-                                    continue;
+                                for (let j=ga.length; j < data.length; j+=2) {
+                                    let achData = ga.length %2;
+                                    if (j%2 != achData) {
+                                        continue;
+                                    }
+                                    let idx = Math.floor((j-ga.length)/2);
+                                    gameStat.set(winnerArray[idx], setGameStatResult(data[j],data[j+1]));
                                 }
-                                let idx = Math.floor((j-ga.length)/2);
-                                gameStat.set(winnerArray[idx], setGameStatResult(data[j],data[j+1]));
-                            }
 
-                            let checkDLC = [];
-                            gameStat.forEach((v, k) => {
-                                v.forEach((v2, k2) => {
-                                    if(!v2) {
-                                        return;
-                                    }
-                                    if (v2.maxAch <= 0 && v2.playtime <= 0 ){
-                                        checkDLC.push(k2);
-                                    }
+                                winners.clear();
+                                gameStat.forEach((v, k) => {
+                                    v.forEach((v2, k2) => {
+                                        if(!v2) {
+                                            return;
+                                        }
+                                        if (v2.maxAch <= 0 && v2.playtime <= 0 ){
+                                            if (!winners.has(k)) {
+                                                winners.set(k, [k2]);
+                                            } else {
+                                                winners.get(k).push(k2);
+                                            }
+                                        }
+                                    });
+                                });
+
+                                if (winners.length <= 0){
+                                    reconstructTable(ga, gameStat, hltb);
+                                    return;
+                                }
+
+                                promise = [];
+                                winnerArray = [];
+                                promise, winnerArray = fetchAchievementAndPlaytime(winners, promise, true);
+                                Promise.all(promise)
+                                .then((responses) => {
+                                    return Promise.all(responses.map(resp => resp.json()));
                                 })
+                                .then(data => {
+                                    let newGameStat = new Map();
+                                    for (let j=0; j < data.length; j+=2) {
+                                        if (j%2 != 0) {
+                                            continue;
+                                        }
+                                        let idx = Math.floor(j/2);
+                                        let temp = setGameStatResult(data[j],data[j+1]);
+                                        // update the data with the recently fetched data
+                                        if (temp && temp.size > 0) {
+                                            newGameStat.set(winnerArray[idx], temp);
+                                        }
+                                    }
+                                    gameStat.forEach((v,k) => {
+                                        if(!newGameStat.has(k)) {
+                                            return;
+                                        }
+                                        v.forEach((v2,k2) => {
+                                            if(!newGameStat.get(k).has(k2)) {
+                                                return;
+                                            }
+                                            gameStat.get(k).set(k2, newGameStat.get(k).get(k2));
+                                        });
+                                    });
+                                    reconstructTable(ga, gameStat, hltb);
+                                }).catch(function(error){
+                                    setTimeout(function() {
+                                        //your code to be executed after 1 second
+                                        loadingModal.hide();
+                                    }, 1000);
+                                    modalErrorContent.innerHTML = "error fetching dlc data <br>"+error;
+                                    errorModal.show();
+                                });
+
+                            }).catch(function(error){
+                                setTimeout(function() {
+                                    //your code to be executed after 1 second
+                                    loadingModal.hide();
+                                }, 1000);
+                                modalErrorContent.innerHTML = "error fetching playtime data <br>"+error;
+                                errorModal.show();
                             });
-                            reconstructTable(ga, gameStat, hltb);
-                        })
-                        .catch(function(error){
+                        }).catch(function(error){
                             setTimeout(function() {
                                 //your code to be executed after 1 second
                                 loadingModal.hide();
