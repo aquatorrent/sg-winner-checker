@@ -113,28 +113,28 @@
             {
 
                 function fetchGASent(username, page) {
-                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/getcreatedgiveaways?username="+username+"&page="+page;
-                    let url = "http://127.0.0.1:3000/api/getcreatedgiveaways?username="+username+"&page="+page;
+                    let url = "https://superb-semolina-4be8e2.netlify.app/api/getcreatedgiveaways?username="+username+"&page="+page;
+                    //let url = "http://127.0.0.1:3000/api/getcreatedgiveaways?username="+username+"&page="+page;
                     return fetch(url);
                 }
 
                 function fetchOwnedGames(username, appids, dlc) {
                     let apiKey = document.getElementById('key').value;
-                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
-                    let url = "http://127.0.0.1:3000/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
+                    let url = "https://superb-semolina-4be8e2.netlify.app/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
+                    //let url = "http://127.0.0.1:3000/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
                     return fetch(url);
                 }
 
                 function fetchAchievement(username, appids, dlc) {
                     let apiKey = document.getElementById('key').value;
-                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
-                    let url = "http://127.0.0.1:3000/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
+                    let url = "https://superb-semolina-4be8e2.netlify.app/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
+                    //let url = "http://127.0.0.1:3000/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids+"&dlc_only="+dlc;
                     return fetch(url);
                 }
 
                 function fetchHLTB(name, appid) {
-                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/gethltbtime?name="+name+"&appid="+appid;
-                    let url = "http://127.0.0.1:3000/api/gethltbtime?name="+name+"&appid="+appid;
+                    let url = "https://superb-semolina-4be8e2.netlify.app/api/gethltbtime?name="+name+"&appid="+appid;
+                    //let url = "http://127.0.0.1:3000/api/gethltbtime?name="+name+"&appid="+appid;
                     return fetch(url);
                 }
 
