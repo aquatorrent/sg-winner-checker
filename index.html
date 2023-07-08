@@ -113,28 +113,28 @@
             {
 
                 function fetchGASent(username, page) {
-                    let url = "https://superb-semolina-4be8e2.netlify.app/api/getcreatedgiveaways?username="+username+"&page="+page;
-                    //let url = "http://127.0.0.1:3000/api/getcreatedgiveaways?username="+username+"&page="+page;
+                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/getcreatedgiveaways?username="+username+"&page="+page;
+                    let url = "http://127.0.0.1:3000/api/getcreatedgiveaways?username="+username+"&page="+page;
                     return fetch(url);
                 }
 
                 function fetchOwnedGames(username, appids) {
                     let apiKey = document.getElementById('key').value;
-                    let url = "https://superb-semolina-4be8e2.netlify.app/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids;
-                    //let url = "http://127.0.0.1:3000/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids;
+                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids;
+                    let url = "http://127.0.0.1:3000/api/getownedgames?steamid="+username+"&key="+apiKey+"&appids="+appids;
                     return fetch(url);
                 }
 
                 function fetchAchievement(username, appids) {
                     let apiKey = document.getElementById('key').value;
-                    let url = "https://superb-semolina-4be8e2.netlify.app/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids;
-                    //let url = "http://127.0.0.1:3000/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids;
+                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids;
+                    let url = "http://127.0.0.1:3000/api/getplayerachievementtotal?steamid="+username+"&key="+apiKey+"&appids="+appids;
                     return fetch(url);
                 }
 
                 function fetchHLTB(name, appid) {
-                    let url = "https://superb-semolina-4be8e2.netlify.app/api/gethltbtime?name="+name+"&appid="+appid;
-                    //let url = "http://127.0.0.1:3000/api/gethltbtime?name="+name+"&appid="+appid;
+                    //let url = "https://superb-semolina-4be8e2.netlify.app/api/gethltbtime?name="+name+"&appid="+appid;
+                    let url = "http://127.0.0.1:3000/api/gethltbtime?name="+name+"&appid="+appid;
                     return fetch(url);
                 }
 
@@ -144,6 +144,21 @@
                     do {
                         currentDate = Date.now();
                     } while (currentDate - date < milliseconds);
+                }
+
+                function fetchAchievementAndPlaytime(winners) {
+                    winnerArray = [];
+                    winners.forEach((v, k) => {
+                        let appids = v.join();
+                        promise.push(fetchAchievement(k, appids));
+                        promise.push(fetchOwnedGames(k, appids));
+                        winnerArray.push(k);
+                        return;
+                    });
+
+                    return Promise.all(promise).then((responses) => {
+                        return Promise.all(responses.map(resp => resp.json()));
+                    });
                 }
 
                 function fetchUserGASent(username, page) {
@@ -169,15 +184,14 @@
                         return;
                     }
 
+                    let ga;
+                    let winnerArray = [];
                     fetchGASent(username, page)
                         .then(response => response.json())
                         .then(resp => {
-                            let ga = resp.results;
+                            ga = resp.results;
                             let winners = new Map();
                             let promise = [];
-
-                            let gameStat = new Map();
-                            let hltb = new Map();
                             
                             for (let r of ga) {
                                 for (let w of r.winners) {
@@ -192,15 +206,12 @@
                                 }
                                 //your code to be executed after 0.3 second
                                 let name = r.name;
-                                let bundle = " BUNDLE";
-                                if (!r.app_id && r.package_id) {
-                                    name = name.toUpperCase().endsWith(bundle) ? name.slice(0, -bundle.length) : name
-                                }
+                                name = name.replace(/[^a-zA-Z0-9 ]/g, '');
                                 sleep(33);
                                 promise.push(fetchHLTB(name, r.app_id));
                             }
 
-                            let winnerArray = [];
+                            winnerArray = [];
                             winners.forEach((v, k) => {
                                 let appids = v.join();
                                 promise.push(fetchAchievement(k, appids));
@@ -208,31 +219,42 @@
                                 winnerArray.push(k);
                                 return;
                             });
+                            fetchAchievementAndPlaytime(winners);
 
-                            Promise.all(promise)
-                            .then((responses) => {
-                                return Promise.all(responses.map(resp => resp.json()));
-                            }).then(function(data){
-                                hltb = setHLTBResult(data.slice(0,ga.length-1));
 
-                                for (let j=ga.length; j < data.length; j+=2) {
-                                    let achData = ga.length %2;
-                                    if (j%2 != achData) {
-                                        continue;
-                                    }
-                                    let idx = Math.floor((j-ga.length)/2);
-                                    gameStat.set(winnerArray[idx], setGameStatResult(data[j],data[j+1]));
+                            return Promise.all(promise);
+                        })
+                        .then((responses) => {
+                            return Promise.all(responses.map(resp => resp.json()));
+                        })
+                        .then(function(data){
+                            let gameStat = new Map();
+                            let hltb = new Map();
+                            hltb = setHLTBResult(data.slice(0,ga.length-1));
+
+                            for (let j=ga.length; j < data.length; j+=2) {
+                                let achData = ga.length %2;
+                                if (j%2 != achData) {
+                                    continue;
                                 }
-                                reconstructTable(ga, gameStat, hltb);
-                            }).catch(function(error){
-                                setTimeout(function() {
-                                    //your code to be executed after 1 second
-                                    loadingModal.hide();
-                                }, 1000);
-                                modalErrorContent.innerHTML = "error fetching user games <br>"+error;
-                                errorModal.show();
+                                let idx = Math.floor((j-ga.length)/2);
+                                gameStat.set(winnerArray[idx], setGameStatResult(data[j],data[j+1]));
+                            }
+
+                            let checkDLC = [];
+                            gameStat.forEach((v, k) => {
+                                v.forEach((v2, k2) => {
+                                    if(!v2) {
+                                        return;
+                                    }
+                                    if (v2.maxAch <= 0 && v2.playtime <= 0 ){
+                                        checkDLC.push(k2);
+                                    }
+                                })
                             });
-                        }).catch(function(error){
+                            reconstructTable(ga, gameStat, hltb);
+                        })
+                        .catch(function(error){
                             setTimeout(function() {
                                 //your code to be executed after 1 second
                                 loadingModal.hide();
@@ -274,16 +296,6 @@
                             ach: v.ach,
                             maxAch: v.maxAch,
                             playtime: pt
-                        });
-                    })
-                    return temp;
-                }
-
-                function setPlaytimeResult(pt) {
-                    let temp = new Map();
-                    pt.forEach((v, k) => {
-                        temp.set(v.appid, {
-                            playtime: v.playtime
                         });
                     })
                     return temp;
@@ -380,20 +392,47 @@
                             if(appID) {
                                 linkGame2.setAttribute('href', "https://store.steampowered.com/app/"+appID);
                             } else {
-                                linkGame2.setAttribute('href', "https://store.steampowered.com/subs/"+appID);
+                                linkGame2.setAttribute('href', "https://store.steampowered.com/subs/"+v.package_id);
                             }
                             linkGame2.innerHTML = v.name;
                             div12.append(linkGame2);
 
                             let div13 = document.createElement('div');
                             let linkGame3 = document.createElement('a');
-                            linkGame3.setAttribute('href', v.link);
-                            linkGame3.innerHTML = "Giveaway link";
+                            if (v.link) {
+                                linkGame3.setAttribute('href', v.link);
+                                linkGame3.innerHTML = "Giveaway link";
+                            } else {
+                                linkGame3.innerHTML = "Unable to fetch giveaway link for private giveaways";
+                            }
                             div13.append(linkGame3);
+
+                            let div14;
+                            if (v.package_id) {
+                                div14 = document.createElement('div');
+                                div14.innerHTML = "As part of ";
+                                let linkGame4 = document.createElement('a');
+                                linkGame4.setAttribute('href', "https://store.steampowered.com/sub/"+v.package_id);
+                                linkGame4.innerHTML = v.package_name;
+                                div14.append(linkGame4);
+                                div14.innerHTML += " bundle";
+                            }
+
+                            let div15;
+                            if (v.group) {
+                                div15 = document.createElement('div');
+                                div15.innerHTML = "Group giveaway";
+                            }
 
                             td1.append(div11);
                             td1.append(div12);
                             td1.append(div13);
+                            if (v.package_id) {
+                                td1.append(div14);
+                            }
+                            if (v.group) {
+                                td1.append(div15);
+                            }
                             tr.append(td1);
                             // /td1
                             
@@ -441,35 +480,35 @@
                             let div32 = document.createElement('div');
                             let div321 = document.createElement('div');
                             let link311 = document.createElement('a');
-                            link311.setAttribute('href', "https://howlongtobeat.com/?q="+v.name);
+                            link311.setAttribute('href', "https://howlongtobeat.com/?q="+v.name.replace(/[^a-zA-Z0-9 ]/g, ''));
                             link311.innerHTML += "HLTB times:";
                             div321.append(link311);
                             div32.append(div321);
                             let div322 = document.createElement('div');
                             div322.setAttribute('class', 'px-2');
                             div322.innerHTML += "Main: ";
-                            if (hltb.has(appID)) {
+                            if (hltb.has(appID) && hltb.get(appID)) {
                                 div322.innerHTML += convertTime(Math.floor(hltb.get(appID).main / 60));
                             } else {
-                                div322.innerHTML += "<no data>";
+                                div322.innerHTML += "No data";
                             }
                             div32.append(div322);
                             let div323 = document.createElement('div');
                             div323.setAttribute('class', 'px-2');
                             div323.innerHTML += "Main + Extra: ";
-                            if (hltb.has(appID)) {
+                            if (hltb.has(appID) && hltb.get(appID)) {
                                 div323.innerHTML += convertTime(Math.floor(hltb.get(appID).plus / 60));
                             } else {
-                                div323.innerHTML += "<no data>";
+                                div323.innerHTML += "No data";
                             }
                             div32.append(div323);
                             let div324 = document.createElement('div');
                             div324.setAttribute('class', 'px-2');
                             div324.innerHTML += "Completionist: ";
-                            if (hltb.has(appID)) {
+                            if (hltb.has(appID) && hltb.get(appID)) {
                                 div324.innerHTML += convertTime(Math.floor(hltb.get(appID).comp / 60));
                             } else {
-                                div324.innerHTML += "<no data>";
+                                div324.innerHTML += "No data";
                             }
                             div32.append(div324);
                             td3.append(div32);
