@@ -62,7 +62,7 @@
                                                 Steamgifts</a></div>
                                         </td>
                                         <td style="width:35%">
-                                            <div>Playtime: 6.2h</div>
+                                            <div>Playtime: <a href="https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=<APIKEY>&steamid=76561198132503739&format=json&input_json={%22steamid%22%3A76561198132503739%2C%22include_appinfo%22%3Afalse%2C%22appids_filter%22%3A[1042490]}">6.2h</a></div>
                                             <hr></hr>
                                             <div>
                                                 <div><a href="https://howlongtobeat.com/?q=Call of the Sea">HLTB times:</a></div>
@@ -511,11 +511,16 @@
                             td3.setAttribute('style', 'width:35%');
                             let div31 = document.createElement('div');
                             div31.innerHTML += "Playtime: ";
+                            let link311 = document.createElement('a');
+                            let inputJSON = `{"steamid":`+steamID+`,"include_appinfo":false,"appids_filter":[`+appID+`]}`
+                            inputJSON = "&input_json=" + encodeURIComponent(inputJSON);
+                            link311.setAttribute('href', "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key="+ document.getElementById('key').value+"&steamid="+steamID+"&format=json"+inputJSON);
                             if (steamID && steamUserStat) {
-                                div31.innerHTML += convertTime(steamUserStat.playtime);
+                                link311.innerHTML += convertTime(steamUserStat.playtime);
                             } else {
-                                div31.innerHTML += "<no data>";
+                                link311.innerHTML += "<no data>";
                             }
+                            div31.append(link311);
                             td3.append(div31);
 
                             let hr31 = document.createElement('hr');
@@ -523,10 +528,10 @@
 
                             let div32 = document.createElement('div');
                             let div321 = document.createElement('div');
-                            let link311 = document.createElement('a');
-                            link311.setAttribute('href', "https://howlongtobeat.com/?q="+v.name.replace(/[^a-zA-Z0-9 ]/g, ''));
-                            link311.innerHTML += "HLTB times:";
-                            div321.append(link311);
+                            let link321 = document.createElement('a');
+                            link321.setAttribute('href', "https://howlongtobeat.com/?q="+v.name.replace(/[^a-zA-Z0-9 ]/g, ''));
+                            link321.innerHTML += "HLTB times:";
+                            div321.append(link321);
                             div32.append(div321);
                             let div322 = document.createElement('div');
                             div322.setAttribute('class', 'px-2');
@@ -562,11 +567,11 @@
 
                             let div33 = document.createElement('div');
                             div33.innerHTML += "Achievement: ";
-                            let link32 = document.createElement('a');
+                            let link33 = document.createElement('a');
                             if (appID && steamID && steamUserStat) {
-                                link32.setAttribute('href', "https://steamcommunity.com/profiles/"+steamID+"/stats/"+appID+"?tab=achievements");
-                                link32.innerHTML += steamUserStat.ach + "/"+steamUserStat.maxAch;
-                                div33.append(link32);
+                                link33.setAttribute('href', "https://steamcommunity.com/profiles/"+steamID+"/stats/"+appID+"?tab=achievements");
+                                link33.innerHTML += steamUserStat.ach + "/"+steamUserStat.maxAch;
+                                div33.append(link33);
                             }
                             td3.append(div33);
                             tr.append(td3);
